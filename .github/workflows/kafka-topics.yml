@@ -1,0 +1,36 @@
+# this workflow is to create Kafka topics
+name: Deploy Kafka Topics
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "topics/**"
+
+  workflow_dispatch:
+
+jobs:
+  deploy-topics:
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Kubernetes connectivity
+        run: |
+          kubectl get nodes
+          kubectl get kafka -n kafka
+
+      - name: Validate topic manifests
+        run: |
+          kubectl apply --dry-run=server -f topics/
+
+      - name: Deploy topics
+        run: |
+          kubectl apply -f topics/
+
+      - name: Verify topics
+        run: |
+          kubectl get kafkatopic -n kafka
